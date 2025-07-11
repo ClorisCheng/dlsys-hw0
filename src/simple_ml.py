@@ -20,7 +20,7 @@ def add(x, y):
         Sum of x + y
     """
     ### BEGIN YOUR CODE
-    pass
+    return x + y
     ### END YOUR CODE
 
 
@@ -48,7 +48,36 @@ def parse_mnist(image_filename, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR CODE
-    pass
+    
+    images = gzip.open(image_filename, 'rb')
+    labels = gzip.open(label_filename, 'rb')
+
+    # Read the header of the images file
+    # >IIII means big-endian unsigned integers
+    # read for 16 bytes, which are the 4 integers, 4 bytes each.
+    magic, num_images, rows, cols = struct.unpack('>IIII', images.read(16))
+    assert magic == 2051, "Invalid MNIST image file format"
+    assert num_images > 0, "No images found in the file"
+    assert rows == 28 and cols == 28, "Expected MNIST images to be 28x28"
+
+    # Read the header of the labels file
+    magic, num_labels = struct.unpack('>II', labels.read(8))
+    assert magic == 2049, "Invalid MNIST label file format"
+    assert num_labels == num_images, "Number of labels does not match number of images"
+    assert num_images > 0, "No labels found in the file"
+    # Read the images and labels
+    X = np.frombuffer(images.read(num_images * rows * cols), dtype=np.uint8)
+    y = np.frombuffer(labels.read(num_labels), dtype=np.uint8)  
+
+    # Reshape and normalize the images
+    X = X.reshape(num_images, rows * cols).astype(np.float32)
+    X /= 255.0  # Normalize to [0, 1]
+    # Ensure labels are in the correct format
+    y = y.astype(np.uint8)
+    images.close()
+    labels.close()
+    return X, y
+
     ### END YOUR CODE
 
 
