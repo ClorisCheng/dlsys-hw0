@@ -97,7 +97,18 @@ def softmax_loss(Z, y):
         Average softmax loss over the sample.
     """
     ### BEGIN YOUR CODE
-    pass
+    
+    # Compute log-sum-exp for numerical stability
+    log_sum_exp = np.log(np.sum(np.exp(Z), axis=1))
+    
+    # Extract the logits for the correct classes
+    correct_logits = Z[np.arange(Z.shape[0]), y]
+    
+    # Compute softmax loss: -z_yi + log(sum(exp(z_j)))
+    loss = -correct_logits + log_sum_exp
+    
+    # Return average loss
+    return np.mean(loss)
     ### END YOUR CODE
 
 
@@ -120,7 +131,27 @@ def softmax_regression_epoch(X, y, theta, lr = 0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    pass
+
+    m = X.shape[0] // batch
+
+    for i in range(m):
+        # Get the current batch
+        X_batch = X[i * batch:(i + 1) * batch] # (b, input_dim)
+        y_batch = y[i * batch:(i + 1) * batch] # (b, )
+
+        # print(f"theta: {theta.shape}")
+        # print(f"X_batch: {X_batch.shape}, y_batch: {y_batch.shape}")
+
+        # Compute logits
+        logits = X_batch @ theta # (b, input_dim) @ (input_dim, num_classes) = (b, num_classes)
+
+        Z = np.divide(np.exp(logits), np.sum(np.exp(logits), axis=1, keepdims=True)) # (b, num_classes)
+
+        I = np.zeros_like(Z) # (b, num_classes)
+        I[np.arange(len(y_batch)), y_batch] = 1 # One-hot encoding of y_batch
+
+        theta -= lr * (X_batch.T @ (Z - I)) / batch  
+
     ### END YOUR CODE
 
 
@@ -147,7 +178,10 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    pass
+    m = X.shape[0] // batch
+    for i in m:
+        X_batch = X[i * batch:(i + 1) * batch] # (b, input_dim)
+        y_batch = y[i * batch:(i + 1) * batch] # (b, )
     ### END YOUR CODE
 
 
