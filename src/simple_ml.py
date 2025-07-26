@@ -155,6 +155,17 @@ def softmax_regression_epoch(X, y, theta, lr = 0.1, batch=100):
     ### END YOUR CODE
 
 
+def relu(X):
+    """ Apply ReLU activation function element-wise to the input array.
+
+    Args:
+        X (np.ndarray[np.float32]): Input array of any shape.
+
+    Returns:
+        np.ndarray[np.float32]: Output array with ReLU applied.
+    """
+    return np.maximum(0, X)  # Element-wise ReLU
+
 def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
     """ Run a single epoch of SGD for a two-layer neural network defined by the
     weights W1 and W2 (with no bias terms):
@@ -179,9 +190,24 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
     """
     ### BEGIN YOUR CODE
     m = X.shape[0] // batch
-    for i in m:
+    for i in range(m):
         X_batch = X[i * batch:(i + 1) * batch] # (b, input_dim)
         y_batch = y[i * batch:(i + 1) * batch] # (b, )
+
+        Z1 = relu(X_batch @ W1)  # (b, hidden_dim)
+        
+        Iy = np.zeros((X_batch.shape[0], W2.shape[1]), dtype=np.float32)  # (b, num_classes)
+        Iy[np.arange(len(y_batch)), y_batch] = 1  # One-hot encoding of y_batch
+
+        G2 = np.exp(Z1 @ W2) 
+        G2 = np.divide(G2, np.sum(G2, axis=1, keepdims=True))  # Softmax probabilities (b, num_classes)
+        G2 -= Iy  # Subtract the one-hot encoded labels (b, num_classes)
+
+        G1 = (G2 @ W2.T) * (Z1 > 0)  # Backpropagate through ReLU (b, hidden_dim)
+
+        W2 -= lr * (Z1.T @ G2) / batch  # Update W2
+        W1 -= lr * (X_batch.T @ G1) / batch  # Update W1
+
     ### END YOUR CODE
 
 
